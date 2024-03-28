@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Management</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body>
+    <div class="container mt-5">
+
+        <!-- Create Book Modal -->
+        <div class="modal fade" id="createBookModal" tabindex="-1" role="dialog" aria-labelledby="modelTitleId"
+            aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Thêm sách</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="createBookForm">
+                            <div class="form-group">
+                                <label for="bookID">Mã Sách:</label>
+                                <input type="number" class="form-control" id="bookID" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="bookName">Tên Sách:</label>
+                                <input type="text" class="form-control" id="bookName" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="NhaXuatBan">Nhà Xuất Bản:</label>
+                                <input type="text" class="form-control" id="NhaXuatBan" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="SoTrang">Số Trang:</label>
+                                <input type="text" class="form-control" id="SoTrang" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="NamXuatBan">Năm xuất bản:</label>
+                                <input type="text" class="form-control" id="NamXuatBan" required>
+                            </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-primary" id="addBookBtn">Save</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit Book Modal -->
+        <div class="modal fade" id="editBookModal" tabindex="-1" role="dialog"
+            aria-labelledby="editBookModalLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="editBookModalLabel">Edit Book</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="editBookForm">
+                            <div class="form-group">
+                                <label for="editBookID">Mã Sách:</label>
+                                <input type="text" class="form-control" id="editBookID" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label for="editBookName">Tên Sách:</label>
+                                <input type="text" class="form-control" id="editBookName" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="editNhaXuatBan">Nhà Xuất Bản:</label>
+                                <input type="text" class="form-control" id="editNhaXuatBan" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="editSoTrang">Số Trang:</label>
+                                <input type="text" class="form-control" id="editSoTrang" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="editNamXuatBan">NamXuatBan:</label>
+                                <input type="text" class="form-control" id="editNamXuatBan" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary" id="editBookBtn">Save Changes</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search Book Form -->
+
+        <div class="mb-4">
+            <form>
+                <div class="form-group">
+                    <label for="searchKeyword">Search Book:</label>
+                    <input type="text" class="form-control" id="searchKeyword" placeholder="Enter keyword...">
+                </div>
+            </form>
+            <div class="row form-group">
+                <div class="col">
+                    <button type="submit" class="btn btn-primary" id="searchBookBtn">Search</button>
+                </div>
+                <div class="col-auto">
+                    <button type="button" class="btn btn-primary" id="create" onclick="$('#createBookModal').modal('show')">Add Book</button>
+                </div>
+            </div>
+        </div>
+        
+
+
+        <!-- Table to display books -->
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Nhà Xuất Bản</th>
+                    <th>Số Trang</th>
+                    <th>NamXuatBan</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="bookList">
+                <!-- Books will be displayed here -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- jQuery and Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <!-- Custom JavaScript -->
+    <script>
+        // Function to fetch and display books
+        const webservice = 'http://localhost:3000';
+        function fetchBooks() {
+            $.get(webservice + '/books', function (data) {
+                $('#bookList').empty();
+                data.data.forEach(function (book) {
+                    $('#bookList').append(`
+                        <tr>
+                            <td>${book.MaSach}</td>
+                            <td>${book.TenSach}</td>
+                            <td>${book.NhaXuatBan}</td>
+                            <td>${book.SoTrang}</td>
+                            <td>${book.NamXuatBan}</td>
+                            <td>
+                                <button class="btn btn-danger" onclick="deleteBook('${book.MaSach}')">Delete</button>
+                                <button class="btn btn-primary" onclick="editBook('${book.MaSach}', '${book.TenSach}', '${book.NhaXuatBan}', '${book.SoTrang}', '${book.NamXuatBan}')">Edit</button>
+                            </td>
+                        </tr>
+                    `);
+                });
+            });
+        }
+
+        // Function to add a new book
+        $('#addBookBtn').click(function (e) {
+            e.preventDefault();
+            var MaSach = $("#bookID").val();
+            var TenSach = $('#bookName').val();
+            var NhaXuatBan = $('#NhaXuatBan').val();
+            var SoTrang = $('#SoTrang').val();
+            var NamXuatBan = $('#NamXuatBan').val();
+
+            $.ajax({
+                url: webservice + '/books',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    MaSach: MaSach,
+                    TenSach: TenSach,
+                    NhaXuatBan: NhaXuatBan,
+                    SoTrang: SoTrang,
+                    NamXuatBan: NamXuatBan,
+                }),
+                success: function () {
+                    fetchBooks();
+                },
+                error: function (xhr, textStatus, errorThrown) {
+                    console.error('Error:', errorThrown);
+                }
+            });
+            $('#createBookModal').modal('hide');
+        });
+
+
+        // Function to delete a book
+        function deleteBook(MaSach) {
+            $.ajax({
+                url: webservice + '/books/' + MaSach,
+                type: 'DELETE',
+                success: function () {
+                    fetchBooks(); // Refresh the book list after deleting a book
+                }
+            });
+        }
+
+
+
+        // Function to edit a book
+        function editBook(MaSach, TenSach, NhaXuatBan, SoTrang, NamXuatBan) {
+            // Populate modal with book data
+           
+            console.log(NhaXuatBan);
+            console.log(SoTrang);
+            $('#editBookModal #editBookID').val(MaSach);
+            $('#editBookModal #editBookName').val(TenSach);
+            $('#editBookModal #editNhaXuatBan').val(NhaXuatBan);
+            $('#editBookModal #editSoTrang').val(SoTrang);
+            $('#editBookModal #editNamXuatBan').val(NamXuatBan);
+
+            // Show modal
+            $('#editBookModal').modal('show');
+        }
+
+        // Function to update book
+        $('#editBookBtn').click(function (e) {
+            e.preventDefault();
+            var MaSach = $("#editBookID").val();
+            var TenSach = $('#editBookName').val();
+            var NhaXuatBan = $('#editNhaXuatBan').val();
+            var SoTrang = $('#editSoTrang').val();
+            var NamXuatBan = $('#editNamXuatBan').val();
+
+            $.ajax({
+                url: webservice + '/books/' + MaSach,
+                type: 'PUT',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    TenSach: TenSach,
+                    NhaXuatBan: NhaXuatBan,
+                    SoTrang: SoTrang,
+                    NamXuatBan: NamXuatBan,
+                }),
+                success: function () {
+                    fetchBooks();
+                    $('#editBookModal').modal('hide');
+                },
+                error: function (xhr, textStatus, errorThrown) {
+                    console.error('Error:', errorThrown);
+                }
+            });
+        });
+
+        // Function to search for a book by ID
+        $('#searchBookBtn').click(function (e) {
+            e.preventDefault();
+            var searchKeyword = $('#searchKeyword').val().trim();
+
+            // Kiểm tra xem searchKeyword có giá trị không
+            if (searchKeyword !== '') {
+                // Gửi yêu cầu AJAX để tìm kiếm sách bằng ID
+                $.ajax({
+                    url: webservice + '/books/' + searchKeyword,
+                    type: 'GET',
+                    contentType: 'application/json',
+                    success: function (data) {
+                        // Kiểm tra xem dữ liệu trả về có tồn tại không
+                        if (data && data.MaSach) {
+                            // Xóa bảng hiện tại
+                            $('#bookList').empty();
+
+                            // Hiển thị sách được tìm thấy
+                            $('#bookList').append(`
+                        <tr>
+                            <td>${data.MaSach}</td>
+                            <td>${data.TenSach}</td>
+                            <td>${data.NhaXuatBan}</td>
+                            <td>${data.SoTrang}</td>
+                            <td>${data.NamXuatBan}</td>
+                            <td>
+                                <button class="btn btn-danger" onclick="deleteBook('${data.MaSach}')">Delete</button>
+                                <button class="btn btn-primary" onclick="editBook('${data.MaSach}', '${data.TenSach}', '${data.NhaXuatBan}', '${data.SoTrang}', '${data.NamXuatBan}')">Edit</button>
+                            </td>
+                        </tr>
+                    `);
+                        } else {
+                            // Nếu không tìm thấy sách, hiển thị thông báo không tìm thấy
+                            $('#bookList').html('<tr><td colspan="6">Không tìm thấy sách</td></tr>');
+                        }
+                    },
+                    error: function (xhr, textStatus, errorThrown) {
+                        if (xhr.status === 404) {
+                            $('#bookList').html('<tr><td colspan="6">Không tìm thấy sách</td></tr>');
+                        }
+                        else console.error('Error:', errorThrown);
+                    }
+                });
+            } else {
+                $('#bookList').html('<tr><td colspan="6">Không được để trống</td></tr>');
+            }
+        });
+
+
+        // Fetch books when the page loads
+        $(document).ready(function () {
+
+            fetchBooks();
+
+        });
+    </script>
+</body>
+
+</html>
