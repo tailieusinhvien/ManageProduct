@@ -1,0 +1,134 @@
+const express = require('express');
+const mysql = require('mysql');
+const cors = require('cors');
+const path = require('path');
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+// Kết nối MySQL
+const db = mysql.createConnection({
+    host: 'localhost',
+    user: 'root',
+    password: '',
+    database: 'book_manage'
+});
+
+// Kiểm tra kết nối
+db.connect((err) => {
+    if (err) {
+        console.error('Error connecting to MySQL database: ' + err.stack);
+        return;
+    }
+    console.log('Connected to MySQL database with ID: ' + db.threadId);
+});
+
+// Sử dụng middleware CORS
+app.use(cors());
+
+// Sử dụng JSON middleware để xử lý dữ liệu JSON
+app.use(express.json());
+
+
+//
+app.get('/', (req,res)=>{
+    res.sendFile(path.join(__dirname,'./index.html'));
+})
+
+// Controller
+const bookController = {
+    // Tìm kiếm sản phẩm bằng ID
+    getBookById: (req, res) => {
+        const MaSach = req.params.MaSach;
+        const query = `SELECT * FROM books WHERE MaSach = ?`;
+        db.query(query, [MaSach], (err, results) => {
+            if (err) {
+                console.error('Error searching book by ID: ' + err.stack);
+                res.status(500).send('Server error');
+                return;
+            }
+            if (results.length === 0) {
+                res.status(404).send('book not found');
+                return;
+            }
+            res.json(results[0]);
+        });
+    },
+
+    // Thêm sản phẩm
+    addBook: (req, res) => {
+        const { MaSach, TenSach, NhaXuatBan, SoTrang, NamXuatBan } = req.body;
+        const query = `INSERT INTO books (MaSach, TenSach, NhaXuatBan, SoTrang, NamXuatBan) VALUES (?,?, ?, ?, ?)`;
+        db.query(query, [MaSach, TenSach, NhaXuatBan, SoTrang, NamXuatBan], (err, result) => {
+            if (err) {
+                console.error('Error adding book: ' + err.stack);
+                res.status(500).send('Server error');
+                return;
+            }
+            res.status(201).send('book added successfully');
+        });
+    },
+
+    // Xóa sản phẩm
+    deleteBook: (req, res) => {
+        const MaSach = req.params.MaSach;
+        const query = `DELETE FROM books WHERE MaSach = ?`;
+        db.query(query, [MaSach], (err, result) => {
+            if (err) {
+                console.error('Error deleting book: ' + err.stack);
+                res.status(500).send('Server error');
+                return;
+            }
+            res.status(200).send('book deleted successfully');
+        });
+    },
+
+    // Sửa thông tin sản phẩm
+    updateBook: (req, res) => {
+        const MaSach = req.params.MaSach;
+        const { TenSach, NhaXuatBan, SoTrang, NamXuatBan } = req.body;
+        const query = `UPDATE books SET TenSach = ?, NhaXuatBan = ?, SoTrang = ?,  NamXuatBan= ? WHERE MaSach = ?`;
+        db.query(query, [TenSach, NhaXuatBan, SoTrang, NamXuatBan, MaSach], (err, result) => {
+            if (err) {
+                console.error('Error updating book: ' + err.stack);
+                res.status(500).send('Server error');
+                return;
+            }
+            res.status(200).send('book updated successfully');
+        });
+    },
+
+    // Lấy toàn bộ dữ liệu
+    getAllBook: (req, res) => {
+        try {
+            db.query('select *from books', (err, result) => {
+                if (err) {
+                    console.log(err);
+                    return res.status(404).json({message: err});
+
+                }
+                return res.status(200).json({ message: "SUCCESS", data: result });
+            })
+
+
+        } catch (err) {
+            console.log(err);
+            res.status(500).json({ err: 'Internal err' });
+        }
+
+    }
+
+};
+
+// Routes
+app.get('/books', bookController.getAllBook);
+app.get('/books/:MaSach', bookController.getBookById);
+app.post('/books', bookController.addBook);
+app.delete('/books/:MaSach', bookController.deleteBook);
+app.put('/books/:MaSach', bookController.updateBook);
+
+// Khởi động server
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+    console.log(`http://localhost:${PORT}`);
+});
