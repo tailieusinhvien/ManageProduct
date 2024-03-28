@@ -1,0 +1,316 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Management</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body>
+    <div class="container mt-5">
+
+        <!-- Create Product Modal -->
+        <div class="modal fade" id="createProductModal" tabindex="-1" role="dialog" aria-labelledby="modelTitleId"
+            aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Thêm sản phẩm</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="createProductForm">
+                            <div class="form-group">
+                                <label for="productID">Product ID:</label>
+                                <input type="number" class="form-control" id="productID" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="productName">Product Name:</label>
+                                <input type="text" class="form-control" id="productName" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="productDate">Production Date:</label>
+                                <input type="date" class="form-control" id="productDate" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="expiryDate">Expiry Date:</label>
+                                <input type="date" class="form-control" id="expiryDate" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="manufacturer">Manufacturer:</label>
+                                <input type="text" class="form-control" id="manufacturer" required>
+                            </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-primary" id="addProductBtn">Save</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit Product Modal -->
+        <div class="modal fade" id="editProductModal" tabindex="-1" role="dialog"
+            aria-labelledby="editProductModalLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="editProductModalLabel">Edit Product</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="editProductForm">
+                            <div class="form-group">
+                                <label for="editProductID">Product ID:</label>
+                                <input type="text" class="form-control" id="editProductID" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label for="editProductName">Product Name:</label>
+                                <input type="text" class="form-control" id="editProductName" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="editProductDate">Production Date:</label>
+                                <input type="date" class="form-control" id="editProductDate" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="editExpiryDate">Expiry Date:</label>
+                                <input type="date" class="form-control" id="editExpiryDate" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="editManufacturer">Manufacturer:</label>
+                                <input type="text" class="form-control" id="editManufacturer" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary" id="editProductBtn">Save Changes</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search Product Form -->
+
+        <div class="mb-4">
+            <form>
+                <div class="form-group">
+                    <label for="searchKeyword">Search Product:</label>
+                    <input type="text" class="form-control" id="searchKeyword" placeholder="Enter keyword...">
+                </div>
+            </form>
+            <div class="row form-group">
+                <div class="col">
+                    <button type="submit" class="btn btn-primary" id="searchProductBtn">Search</button>
+                </div>
+                <div class="col-auto">
+                    <button type="button" class="btn btn-primary" id="create" onclick="$('#createProductModal').modal('show')">Add Product</button>
+                </div>
+            </div>
+        </div>
+        
+
+
+        <!-- Table to display products -->
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Production Date</th>
+                    <th>Expiry Date</th>
+                    <th>Manufacturer</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="productList">
+                <!-- Products will be displayed here -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- jQuery and Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <!-- Custom JavaScript -->
+    <script>
+        // Function to fetch and display products
+        const webservice = 'http://localhost:3000';
+        function fetchProducts() {
+            $.get(webservice + '/products', function (data) {
+                $('#productList').empty();
+                data.data.forEach(function (product) {
+                    $('#productList').append(`
+                        <tr>
+                            <td>${product.MaSP}</td>
+                            <td>${product.TenSP}</td>
+                            <td>${product.NgaySX}</td>
+                            <td>${product.NgayHetHan}</td>
+                            <td>${product.NoiSX}</td>
+                            <td>
+                                <button class="btn btn-danger" onclick="deleteProduct('${product.MaSP}')">Delete</button>
+                                <button class="btn btn-primary" onclick="editProduct('${product.MaSP}', '${product.TenSP}', '${product.NgaySX}', '${product.NgayHetHan}', '${product.NoiSX}')">Edit</button>
+                            </td>
+                        </tr>
+                    `);
+                });
+            });
+        }
+
+        // Function to add a new product
+        $('#addProductBtn').click(function (e) {
+            e.preventDefault();
+            var MaSP = $("#productID").val();
+            var TenSP = $('#productName').val();
+            var NgaySX = $('#productDate').val();
+            var NgayHetHan = $('#expiryDate').val();
+            var NoiSX = $('#manufacturer').val();
+
+            $.ajax({
+                url: webservice + '/products',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    MaSP: MaSP,
+                    TenSP: TenSP,
+                    NgaySX: NgaySX,
+                    NgayHetHan: NgayHetHan,
+                    NoiSX: NoiSX,
+                }),
+                success: function () {
+                    fetchProducts();
+                },
+                error: function (xhr, textStatus, errorThrown) {
+                    console.error('Error:', errorThrown);
+                }
+            });
+            $('#createProductModal').modal('hide');
+        });
+
+
+        // Function to delete a product
+        function deleteProduct(MaSP) {
+            $.ajax({
+                url: webservice + '/products/' + MaSP,
+                type: 'DELETE',
+                success: function () {
+                    fetchProducts(); // Refresh the product list after deleting a product
+                }
+            });
+        }
+
+
+
+        // Function to edit a product
+        function editProduct(MaSP, TenSP, NgaySX, NgayHetHan, NoiSX) {
+            // Populate modal with product data
+            var DateSX = new Date(NgaySX).toISOString().split('T')[0];
+            var DateHetHan = new Date(NgayHetHan).toISOString().split('T')[0];
+            console.log(NgaySX);
+            console.log(NgayHetHan);
+            $('#editProductModal #editProductID').val(MaSP);
+            $('#editProductModal #editProductName').val(TenSP);
+            $('#editProductModal #editProductDate').val(DateSX);
+            $('#editProductModal #editExpiryDate').val(DateHetHan);
+            $('#editProductModal #editManufacturer').val(NoiSX);
+
+            // Show modal
+            $('#editProductModal').modal('show');
+        }
+
+        // Function to update product
+        $('#editProductBtn').click(function (e) {
+            e.preventDefault();
+            var MaSP = $("#editProductID").val();
+            var TenSP = $('#editProductName').val();
+            var NgaySX = $('#editProductDate').val();
+            var NgayHetHan = $('#editExpiryDate').val();
+            var NoiSX = $('#editManufacturer').val();
+
+            $.ajax({
+                url: webservice + '/products/' + MaSP,
+                type: 'PUT',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    TenSP: TenSP,
+                    NgaySX: NgaySX,
+                    NgayHetHan: NgayHetHan,
+                    NoiSX: NoiSX,
+                }),
+                success: function () {
+                    fetchProducts();
+                    $('#editProductModal').modal('hide');
+                },
+                error: function (xhr, textStatus, errorThrown) {
+                    console.error('Error:', errorThrown);
+                }
+            });
+        });
+
+        // Function to search for a product by ID
+        $('#searchProductBtn').click(function (e) {
+            e.preventDefault();
+            var searchKeyword = $('#searchKeyword').val().trim();
+
+            // Kiểm tra xem searchKeyword có giá trị không
+            if (searchKeyword !== '') {
+                // Gửi yêu cầu AJAX để tìm kiếm sản phẩm bằng ID
+                $.ajax({
+                    url: webservice + '/products/' + searchKeyword,
+                    type: 'GET',
+                    contentType: 'application/json',
+                    success: function (data) {
+                        // Kiểm tra xem dữ liệu trả về có tồn tại không
+                        if (data && data.MaSP) {
+                            // Xóa bảng hiện tại
+                            $('#productList').empty();
+
+                            // Hiển thị sản phẩm được tìm thấy
+                            $('#productList').append(`
+                        <tr>
+                            <td>${data.MaSP}</td>
+                            <td>${data.TenSP}</td>
+                            <td>${data.NgaySX}</td>
+                            <td>${data.NgayHetHan}</td>
+                            <td>${data.NoiSX}</td>
+                            <td>
+                                <button class="btn btn-danger" onclick="deleteProduct('${data.MaSP}')">Delete</button>
+                                <button class="btn btn-primary" onclick="editProduct('${data.MaSP}', '${data.TenSP}', '${data.NgaySX}', '${data.NgayHetHan}', '${data.NoiSX}')">Edit</button>
+                            </td>
+                        </tr>
+                    `);
+                        } else {
+                            // Nếu không tìm thấy sản phẩm, hiển thị thông báo không tìm thấy
+                            $('#productList').html('<tr><td colspan="6">Không tìm thấy sản phẩm</td></tr>');
+                        }
+                    },
+                    error: function (xhr, textStatus, errorThrown) {
+                        if (xhr.status === 404) {
+                            $('#productList').html('<tr><td colspan="6">Không tìm thấy sản phẩm</td></tr>');
+                        }
+                        else console.error('Error:', errorThrown);
+                    }
+                });
+            } else {
+                $('#productList').html('<tr><td colspan="6">Không được để trống</td></tr>');
+            }
+        });
+
+
+        // Fetch products when the page loads
+        $(document).ready(function () {
+
+            fetchProducts();
+
+        });
+    </script>
+</body>
+
+</html>
